@@ -43,8 +43,8 @@ const DEFAULT_TEMPLATES = {
             body: 'A new expense from {vendor} for ${total} has been submitted by {userName} and is awaiting your approval.',
         },
         ar: {
-            subject: 'تم تقديم مصروف جديد: {vendor}',
-            body: 'تم تقديم مصروف جديد من {vendor} بمبلغ ${total} بواسطة {userName} وهو بانتظار موافقتك.',
+            "subject": "تم تقديم مصروف جديد: {vendor}",
+            "body": "تم تقديم مصروف جديد من {vendor} بمبلغ ${total} بواسطة {userName} وهو بانتظار موافقتك."
         }
     },
     'Expense Approved': {
@@ -53,8 +53,8 @@ const DEFAULT_TEMPLATES = {
             body: 'Your expense from {vendor} for ${total} has been approved.',
         },
         ar: {
-            subject: 'تمت الموافقة على المصروف: {vendor}',
-            body: 'تمت الموافقة على مصروفك من {vendor} بمبلغ ${total}.',
+            "subject": "تمت الموافقة على المصروف: {vendor}",
+            "body": "تمت الموافقة على مصروفك من {vendor} بمبلغ ${total}."
         }
     },
     'Expense Rejected': {
@@ -63,8 +63,8 @@ const DEFAULT_TEMPLATES = {
             body: 'Your expense from {vendor} for ${total} has been rejected. Please review and contact your manager.',
         },
         ar: {
-            subject: 'تم رفض المصروف: {vendor}',
-            body: 'تم رفض مصروفك من {vendor} بمبلغ ${total}. يرجى المراجعة والتواصل مع مديرك.',
+            "subject": "تم رفض المصروف: {vendor}",
+            "body": "تم رفض مصروفك من {vendor} بمبلغ ${total}. يرجى المراجعة والتواصل مع مديرك."
         }
     },
     'Budget Threshold Warning': {
@@ -73,8 +73,8 @@ const DEFAULT_TEMPLATES = {
             body: 'The budget for "{responsibilityName}" has reached {usagePercentage}% of its limit.',
         },
         ar: {
-            subject: 'تحذير الميزانية: {responsibilityName}',
-            body: 'وصلت ميزانية "{responsibilityName}" إلى {usagePercentage}% من حدها.',
+            "subject": "تحذير الميزانية: {responsibilityName}",
+            "body": "وصلت ميزانية \"{responsibilityName}\" إلى {usagePercentage}% من حدها."
         }
     },
     'Responsibility Assigned/Modified': {
@@ -83,8 +83,8 @@ const DEFAULT_TEMPLATES = {
             body: 'You have been assigned a new financial responsibility: "{responsibilityName}" with a budget of ${budget}.',
         },
         ar: {
-            subject: 'تم تعيين مسؤولية مالية جديدة',
-            body: 'تم تعيين مسؤولية مالية جديدة لك: "{responsibilityName}" بميزانية قدرها ${budget}.',
+            "subject": "تم تعيين مسؤولية مالية جديدة",
+            "body": "تم تعيين مسؤولية مالية جديدة لك: \"{responsibilityName}\" بميزانية قدرها ${budget}."
         }
     }
 };
@@ -126,10 +126,21 @@ const toCamelCase = (row) => {
                 value = num;
             }
         }
-        newRow[newKey] = value;
+        // Ensure attachments is always an array if it exists
+        if (newKey === 'attachment' && value && !Array.isArray(value)) {
+            value = [value];
+        }
+        // Map 'attachment' DB column to 'attachments' frontend prop for backward compatibility
+        if (newKey === 'attachment') {
+            newRow['attachments'] = Array.isArray(value) ? value : (value ? [value] : []);
+        } else {
+             newRow[newKey] = value;
+        }
     }
     if (newRow.passwordHash) delete newRow.passwordHash;
     if (newRow.isDeleted !== undefined) delete newRow.isDeleted;
+    // Cleanup temp attachment field
+    delete newRow.attachment;
     return newRow;
 };
 
@@ -526,18 +537,51 @@ app.get('/api/expenses', async (req, res) => {
 });
 
 app.post('/api/expenses', async (req, res) => {
-    const { vendor, invoiceNumber, date, lineItems, tax, total, notes, category, submittedBy, responsibilityId, attachment } = req.body;
+    const { vendor, invoiceNumber, date, lineItems, tax, total, notes, category, submittedBy, responsibilityId, attachments } = req.body;
     const id = `exp${Date.now()}`;
     const status = 'Pending';
+    const client = await pool.connect();
+
     try {
-        const result = await pool.query(
-            'INSERT INTO expenses (id, vendor, invoice_number, date, line_items, tax, total, notes, category, status, submitted_by, responsibility_id, attachment, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *',
-            [id, vendor, invoiceNumber, date, JSON.stringify(lineItems), tax, total, notes, category, status, submittedBy, responsibilityId, attachment]
+        await client.query('BEGIN');
+
+        // 1. Fetch User Role
+        const userRes = await client.query('SELECT role FROM users WHERE id = $1', [submittedBy]);
+        const userRole = userRes.rows[0]?.role;
+
+        // 2. Check Budget
+        const respRes = await client.query('SELECT budget FROM financial_responsibilities WHERE id = $1', [responsibilityId]);
+        if (respRes.rows.length === 0) {
+            throw new Error('Responsibility not found');
+        }
+        const budget = parseFloat(respRes.rows[0].budget);
+
+        const expensesRes = await client.query(
+            'SELECT SUM(total) as spent FROM expenses WHERE responsibility_id = $1 AND status != \'Rejected\' AND is_deleted = false',
+            [responsibilityId]
         );
+        const currentSpent = parseFloat(expensesRes.rows[0].spent || 0);
+        const newTotal = currentSpent + parseFloat(total);
+
+        if (newTotal > budget && userRole !== 'Finance Manager') {
+            await client.query('ROLLBACK');
+            return res.status(403).send(`Budget Exceeded: This expense (${total}) exceeds the remaining budget. Current spent: ${currentSpent}, Budget: ${budget}. Contact a manager.`);
+        }
+
+        // 3. Insert Expense
+        const result = await client.query(
+            'INSERT INTO expenses (id, vendor, invoice_number, date, line_items, tax, total, notes, category, status, submitted_by, responsibility_id, attachment, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW()) RETURNING *',
+            [id, vendor, invoiceNumber, date, JSON.stringify(lineItems), tax, total, notes, category, status, submittedBy, responsibilityId, JSON.stringify(attachments)]
+        );
+        
+        await client.query('COMMIT');
         res.json(toCamelCase(result.rows[0]));
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error(err);
-        res.status(500).send('Server error');
+        res.status(500).send(err.message || 'Server error');
+    } finally {
+        client.release();
     }
 });
 

@@ -59,12 +59,18 @@ export enum ExpenseStatus {
     REJECTED = 'Rejected',
 }
 
+export interface Attachment {
+    fileName: string;
+    fileType: string;
+    data: string; // base64
+}
+
 export interface Expense {
     id: string;
     vendor: string;
     invoiceNumber: string;
     date: string;
-    createdAt?: string; // Added field for submission timestamp
+    createdAt?: string; 
     lineItems: LineItem[];
     tax: number;
     total: number;
@@ -73,11 +79,7 @@ export interface Expense {
     status: ExpenseStatus;
     submittedBy: string;
     responsibilityId: string;
-    attachment?: {
-        fileName: string;
-        fileType: string;
-        data: string;
-    };
+    attachments?: Attachment[]; 
     isDeleted?: boolean;
 }
 

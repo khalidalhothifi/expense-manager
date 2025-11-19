@@ -67,11 +67,15 @@
     "scanWithCamera": "Scan with Camera",
     "processingInvoice": "Processing Invoice...",
     "error": {
-      "upload": "Please upload a JPG or PNG file.",
+      "upload": "Please upload a JPG, PNG, or PDF file.",
       "extract": "Could not extract data from invoice. Please fill manually.",
       "processing": "An error occurred during invoice processing.",
       "camera": "Could not access camera. Please check permissions.",
       "responsibility": "Please select a financial responsibility."
+    },
+    "budgetWarning": {
+        "user": "Error: This expense exceeds the responsibility budget. You cannot submit this request.",
+        "manager": "Warning: This expense exceeds the responsibility budget by ${over}. Proceeding will require override."
     },
     "vendor": "Vendor",
     "invoiceNumber": "Invoice Number",

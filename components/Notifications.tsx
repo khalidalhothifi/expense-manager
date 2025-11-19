@@ -103,6 +103,7 @@ const Notifications: React.FC = () => {
     notificationSettings,
     saveNotificationSettings,
     sendNotification,
+    currentUser,
     t,
   } = useAppContext();
   const [settings, setSettings] = useState(notificationSettings);
@@ -145,12 +146,18 @@ const Notifications: React.FC = () => {
   };
 
   const sendTestEmail = () => {
-    sendNotification(NotificationTrigger.NEW_INVOICE, {
-      vendor: "Test Vendor",
-      total: 123.45,
-      userName: "Test User",
-      _toastMessage: "Test email sent successfully!",
-    });
+    if (currentUser) {
+      sendNotification(
+        NotificationTrigger.NEW_INVOICE,
+        {
+          vendor: "Test Vendor",
+          total: 123.45,
+          userName: "Test User",
+          _toastMessage: "Test email sent successfully!",
+        },
+        [currentUser.email]
+      );
+    }
   };
 
   const injectVariable = (variable: string) => {

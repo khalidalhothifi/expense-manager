@@ -142,7 +142,8 @@ export const addExpense = async (
         id: `exp${Date.now()}`,
         status: ExpenseStatus.PENDING,
         submittedBy: submittedById,
-        createdAt: new Date().toISOString(), // Mock timestamp
+        createdAt: new Date().toISOString(),
+        attachments: expenseData.attachments || []
     };
     expenses = [newExpense, ...expenses];
     return newExpense;

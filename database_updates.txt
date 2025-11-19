@@ -3,7 +3,7 @@
 -- ExpenSavvy - Database Migration Script
 -- =================================================================================================
 -- This script contains the specific changes required to update the existing database schema
--- to support soft deletes, system settings, and timestamp tracking.
+-- to support soft deletes, system settings, timestamp tracking, and multiple attachments.
 -- =================================================================================================
 
 -- 1. Create System Settings Table
@@ -21,6 +21,13 @@ ALTER TABLE expenses ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
 
 -- 3. Add Created At Timestamp for Expenses
 ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- 4. Migrate 'attachment' column to 'attachments' array structure
+-- First, rename the column if you prefer, or just update the data.
+-- Here we update existing JSONB data: if it's a single object, wrap it in an array.
+UPDATE expenses 
+SET attachment = jsonb_build_array(attachment) 
+WHERE attachment IS NOT NULL AND jsonb_typeof(attachment) = 'object';
 
 -- =================================================================================================
 -- 7. Insert Default System Settings (Run if you want to manually seed defaults)

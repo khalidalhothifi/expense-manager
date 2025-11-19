@@ -3,15 +3,20 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ExtractedInvoiceData } from "../types";
 
 // Initialize the Gemini API client
-// Note: In a real production app, you should proxy these requests through your backend
-// to avoid exposing your API key in the client code.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const extractInvoiceData = async (
   base64Image: string,
-  mimeType: 'image/jpeg' | 'image/png'
+  mimeType: string
 ): Promise<ExtractedInvoiceData | null> => {
   try {
+    // Ensure we only send supported types
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!supportedTypes.includes(mimeType)) {
+        console.warn("Unsupported mime type for Gemini OCR:", mimeType);
+        return null;
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: {
@@ -23,7 +28,7 @@ export const extractInvoiceData = async (
                 }
             },
             {
-                text: "Extract invoice data from this image. Return JSON."
+                text: "Extract invoice data from this document. Return JSON."
             }
         ]
       },
