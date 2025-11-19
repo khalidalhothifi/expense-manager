@@ -1,0 +1,143 @@
+-- =================================================================================================
+-- Database Creation (Run this section first in your SQL Server management tool)
+-- =================================================================================================
+-- This creates a new database with a collation that supports Arabic characters
+-- for proper sorting and comparison.
+CREATE DATABASE expense_manager_db
+COLLATE Arabic_CI_AS;
+GO
+
+-- Switch to the newly created database context
+USE expense_manager_db;
+GO
+-- =================================================================================================
+
+-- =================================================================================================
+-- ExpenSavvy - Complete Database Setup Script for SQL Server
+-- =================================================================================================
+-- This script will:
+-- 1. Drop existing tables to ensure a clean setup.
+-- 2. Create all necessary tables with appropriate constraints and data types.
+-- 3. Insert the initial seed data required for the application to run.
+-- =================================================================================================
+
+-- Drop tables in reverse order of dependency to avoid foreign key constraint errors
+IF OBJECT_ID('expenses', 'U') IS NOT NULL DROP TABLE expenses;
+IF OBJECT_ID('financial_responsibilities', 'U') IS NOT NULL DROP TABLE financial_responsibilities;
+IF OBJECT_ID('vendors', 'U') IS NOT NULL DROP TABLE vendors;
+IF OBJECT_ID('groups', 'U') IS NOT NULL DROP TABLE groups;
+IF OBJECT_ID('users', 'U') IS NOT NULL DROP TABLE users;
+GO
+
+-- =============================================
+-- TABLE CREATION (DDL)
+-- =============================================
+
+-- Users Table
+-- Stores user information, credentials, and roles.
+CREATE TABLE users (
+    id NVARCHAR(50) PRIMARY KEY,
+    name NVARCHAR(255) NOT NULL,
+    email NVARCHAR(255) UNIQUE NOT NULL,
+    role NVARCHAR(50) NOT NULL,
+    password_hash NVARCHAR(MAX) NOT NULL -- In a real app, this would be a secure hash.
+);
+GO
+
+-- Groups Table
+-- Stores user groups for assigning shared responsibilities.
+CREATE TABLE groups (
+    id NVARCHAR(50) PRIMARY KEY,
+    name NVARCHAR(255) NOT NULL,
+    member_ids NVARCHAR(MAX) NOT NULL,
+    CONSTRAINT CHK_groups_member_ids_is_json CHECK (ISJSON(member_ids) > 0)
+);
+GO
+
+-- Vendors Table
+-- Stores a list of unique vendors.
+CREATE TABLE vendors (
+    id NVARCHAR(50) PRIMARY KEY,
+    name NVARCHAR(255) UNIQUE NOT NULL
+);
+GO
+
+-- Financial Responsibilities Table
+-- Defines budgets and their assignments to users or groups.
+CREATE TABLE financial_responsibilities (
+    id NVARCHAR(50) PRIMARY KEY,
+    name NVARCHAR(255) NOT NULL,
+    budget DECIMAL(12, 2) NOT NULL,
+    model NVARCHAR(50) NOT NULL,
+    assignee NVARCHAR(MAX) NOT NULL,
+    distributed_allocations NVARCHAR(MAX),
+    history NVARCHAR(MAX), -- Storing as a JSON array of strings
+    CONSTRAINT CHK_financial_responsibilities_assignee_is_json CHECK (ISJSON(assignee) > 0),
+    CONSTRAINT CHK_financial_responsibilities_distributed_allocations_is_json CHECK (ISJSON(distributed_allocations) > 0 OR distributed_allocations IS NULL),
+    CONSTRAINT CHK_financial_responsibilities_history_is_json CHECK (ISJSON(history) > 0 OR history IS NULL)
+);
+GO
+
+-- Expenses Table
+-- Stores all individual expense records.
+CREATE TABLE expenses (
+    id NVARCHAR(50) PRIMARY KEY,
+    vendor NVARCHAR(255) NOT NULL,
+    invoice_number NVARCHAR(100),
+    date DATE NOT NULL,
+    line_items NVARCHAR(MAX) NOT NULL,
+    tax DECIMAL(10, 2) DEFAULT 0.00,
+    total DECIMAL(12, 2) NOT NULL,
+    notes NVARCHAR(MAX),
+    category NVARCHAR(100),
+    status NVARCHAR(50) NOT NULL,
+    submitted_by NVARCHAR(50) NOT NULL FOREIGN KEY REFERENCES users(id),
+    responsibility_id NVARCHAR(50) NOT NULL FOREIGN KEY REFERENCES financial_responsibilities(id),
+    attachment NVARCHAR(MAX),
+    CONSTRAINT CHK_expenses_line_items_is_json CHECK (ISJSON(line_items) > 0),
+    CONSTRAINT CHK_expenses_attachment_is_json CHECK (ISJSON(attachment) > 0 OR attachment IS NULL)
+);
+GO
+
+
+-- =============================================
+-- SEED DATA INSERTION (DML)
+-- =============================================
+
+-- Insert Users
+INSERT INTO users (id, name, email, role, password_hash) VALUES
+('user1', 'Alice', 'alice@example.com', 'Finance Manager', 'password123'),
+('user2', 'Bob', 'bob@example.com', 'User', 'password123'),
+('user3', 'Charlie', 'charlie@example.com', 'User', 'password123'),
+('user4', 'Diana', 'diana@example.com', 'User', 'password123');
+GO
+
+-- Insert Groups
+INSERT INTO groups (id, name, member_ids) VALUES
+('group1', 'Marketing Team', '["user2", "user3"]'),
+('group2', 'Engineering Team', '["user4"]');
+GO
+
+-- Insert Vendors
+INSERT INTO vendors (id, name) VALUES
+('vendor1', 'AdCreative Inc.'),
+('vendor2', 'Cloud Services LLC'),
+('vendor3', 'Office Supplies Co.');
+GO
+
+-- Insert Financial Responsibilities
+INSERT INTO financial_responsibilities (id, name, budget, model, assignee, distributed_allocations, history) VALUES
+('resp1', 'Marketing Q3 Budget', 5000.00, 'Shared Group Balance', '{"type": "group", "id": "group1"}', NULL, '["Created on 2024-07-01"]'),
+('resp2', 'Diana''s Software Subscription', 500.00, 'Shared Group Balance', '{"type": "user", "id": "user4"}', NULL, '["Created on 2024-07-01"]'),
+('resp3', 'Engineering Projects Q3', 10000.00, 'Distributed Group Balance', '{"type": "group", "id": "group2"}', '[{"userId": "user4", "amount": 10000}]', '["Created on 2024-07-10"]');
+GO
+
+-- Insert Expenses
+INSERT INTO expenses (id, vendor, invoice_number, date, line_items, tax, total, notes, category, status, submitted_by, responsibility_id, attachment) VALUES
+('exp1', 'AdCreative Inc.', 'INV-001', '2024-07-15', '[{"description": "Social Media Campaign", "amount": 1200, "quantity": 1}]', 120.00, 1320.00, 'July campaign launch', 'Marketing', 'Approved', 'user2', 'resp1', NULL),
+('exp2', 'Cloud Services LLC', 'INV-002', '2024-07-20', '[{"description": "Server Hosting", "amount": 350, "quantity": 1}]', 0.00, 350.00, '', 'Software', 'Pending', 'user4', 'resp2', NULL);
+GO
+
+-- =================================================================================================
+-- End of Script
+-- =================================================================================================

@@ -1,0 +1,7 @@
+{
+  "name": "Gemini Expense Manager",
+  "description": "A comprehensive Expense Management Application leveraging Gemini for OCR-based data extraction, featuring role-based access, budget management, and a customizable email notification system.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

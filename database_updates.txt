@@ -1,0 +1,89 @@
+
+-- =================================================================================================
+-- ExpenSavvy - Database Migration Script
+-- =================================================================================================
+-- This script contains the specific changes required to update the existing database schema
+-- to support soft deletes, system settings, and timestamp tracking.
+-- =================================================================================================
+
+-- 1. Create System Settings Table
+CREATE TABLE IF NOT EXISTS system_settings (
+    key VARCHAR(50) PRIMARY KEY,
+    value JSONB NOT NULL
+);
+
+-- 2. Add Soft Delete Flags
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE financial_responsibilities ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+
+-- 3. Add Created At Timestamp for Expenses
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- =================================================================================================
+-- 7. Insert Default System Settings (Run if you want to manually seed defaults)
+-- =================================================================================================
+
+-- Default SMTP Settings
+INSERT INTO system_settings (key, value) 
+VALUES ('smtp', '{"server": "smtp.example.com", "port": 587, "user": "noreply@example.com", "pass": "password"}')
+ON CONFLICT (key) DO NOTHING;
+
+-- Default Email Templates (Bilingual)
+-- NOTE: Uses standard JSON escaping (\") for quotes inside strings.
+INSERT INTO system_settings (key, value)
+VALUES ('templates', '{
+    "New Invoice Submitted": {
+        "en": {
+            "subject": "New Expense Submitted: {vendor}",
+            "body": "A new expense from {vendor} for ${total} has been submitted by {userName} and is awaiting your approval."
+        },
+        "ar": {
+            "subject": "تم تقديم مصروف جديد: {vendor}",
+            "body": "تم تقديم مصروف جديد من {vendor} بمبلغ ${total} بواسطة {userName} وهو بانتظار موافقتك."
+        }
+    },
+    "Expense Approved": {
+        "en": {
+            "subject": "Expense Approved: {vendor}",
+            "body": "Your expense from {vendor} for ${total} has been approved."
+        },
+        "ar": {
+            "subject": "تمت الموافقة على المصروف: {vendor}",
+            "body": "تمت الموافقة على مصروفك من {vendor} بمبلغ ${total}."
+        }
+    },
+    "Expense Rejected": {
+        "en": {
+            "subject": "Expense Rejected: {vendor}",
+            "body": "Your expense from {vendor} for ${total} has been rejected. Please review and contact your manager."
+        },
+        "ar": {
+            "subject": "تم رفض المصروف: {vendor}",
+            "body": "تم رفض مصروفك من {vendor} بمبلغ ${total}. يرجى المراجعة والتواصل مع مديرك."
+        }
+    },
+    "Budget Threshold Warning": {
+        "en": {
+            "subject": "Budget Warning: {responsibilityName}",
+            "body": "The budget for \"{responsibilityName}\" has reached {usagePercentage}% of its limit."
+        },
+        "ar": {
+            "subject": "تحذير الميزانية: {responsibilityName}",
+            "body": "وصلت ميزانية \"{responsibilityName}\" إلى {usagePercentage}% من حدها."
+        }
+    },
+    "Responsibility Assigned/Modified": {
+        "en": {
+            "subject": "New Financial Responsibility Assigned",
+            "body": "You have been assigned a new financial responsibility: \"{responsibilityName}\" with a budget of ${budget}."
+        },
+        "ar": {
+            "subject": "تم تعيين مسؤولية مالية جديدة",
+            "body": "تم تعيين مسؤولية مالية جديدة لك: \"{responsibilityName}\" بميزانية قدرها ${budget}."
+        }
+    }
+}')
+ON CONFLICT (key) DO NOTHING;

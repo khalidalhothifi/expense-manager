@@ -1,0 +1,193 @@
+
+{
+  "appName": "إكسبنسافي",
+  "languageSwitcher": {
+    "label": "محدد اللغة"
+  },
+  "login": {
+    "title": "تسجيل الدخول إلى حسابك",
+    "emailLabel": "عنوان البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "signIn": "تسجيل الدخول",
+    "error": "البريد الإلكتروني أو كلمة المرور غير صالحة. يرجى المحاولة مرة أخرى.",
+    "emailPlaceholder": "alice@example.com",
+    "passwordPlaceholder": "••••••••",
+    "dataSource": "مصدر البيانات",
+    "demoData": "بيانات تجريبية",
+    "realDatabase": "قاعدة بيانات حقيقية"
+  },
+  "header": {
+    "welcome": "أهلاً بك، {name}!",
+    "logout": "تسجيل الخروج"
+  },
+  "sidebar": {
+    "dashboard": "لوحة التحكم",
+    "expenses": "المصروفات",
+    "responsibilities": "المسؤوليات",
+    "notifications": "الإشعارات",
+    "userManagement": "إدارة المستخدمين"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "totalExpenses": "إجمالي المصروفات",
+    "approvedSpending": "الإنفاق المعتمد",
+    "pendingExpenses": "المصروفات المعلقة",
+    "rejectedExpenses": "المصروفات المرفوضة",
+    "pendingApprovals": "بانتظار الموافقة",
+    "spent": "تم إنفاق: ${amount}",
+    "budget": "الميزانية: ${amount}",
+    "spendingByCategory": "الإنفاق حسب الفئة",
+    "noApprovedExpenses": "لا توجد مصروفات معتمدة لعرضها.",
+    "monthlySpending": "الإنفاق الشهري",
+    "viewingGlobal": "عرض شامل"
+  },
+  "filters": {
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "vendor": "البائع",
+    "allVendors": "كل البائعين",
+    "status": "الحالة",
+    "allStatuses": "كل الحالات",
+    "category": "الفئة",
+    "allCategories": "كل الفئات",
+    "noResults": "لا توجد نتائج.",
+    "total": "الإجمالي",
+    "searchByName": "بحث بالاسم...",
+    "totalBudget": "إجمالي الميزانية",
+    "totalSpent": "إجمالي المنفق",
+    "searchUsers": "بحث بالاسم أو البريد...",
+    "allRoles": "كل الأدوار",
+    "totalRecords": "عدد السجلات: {count}"
+  },
+  "expenses": {
+    "title": "المصروفات",
+    "newExpense": "+ مصروف جديد",
+    "closeForm": "إغلاق النموذج",
+    "uploadInvoice": "تحميل الفاتورة",
+    "scanWithCamera": "مسح بالكاميرا",
+    "processingInvoice": "جاري معالجة الفاتورة...",
+    "error": {
+      "upload": "يرجى تحميل ملف JPG أو PNG.",
+      "extract": "تعذر استخراج البيانات من الفاتورة. يرجى ملؤها يدويًا.",
+      "processing": "حدث خطأ أثناء معالجة الفاتورة.",
+      "camera": "تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.",
+      "responsibility": "يرجى تحديد مسؤولية مالية."
+    },
+    "vendor": "البائع",
+    "invoiceNumber": "رقم الفاتورة",
+    "date": "التاريخ",
+    "category": "الفئة",
+    "selectResponsibility": "اختر المسؤولية",
+    "lineItems": "البنود",
+    "description": "الوصف",
+    "qty": "الكمية",
+    "amount": "المبلغ",
+    "remove": "إزالة",
+    "addLineItem": "+ إضافة بند",
+    "tax": "الضريبة",
+    "totalAmount": "المبلغ الإجمالي",
+    "notesPlaceholder": "إضافة ملاحظات...",
+    "submitExpense": "تقديم المصروف",
+    "scanInvoiceTitle": "مسح الفاتورة",
+    "capture": "التقاط",
+    "submittedBy": "مقدم من",
+    "total": "الإجمالي",
+    "attachment": "المرفق",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "view": "عرض",
+    "na": "غير متاح",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "unknown": "غير معروف"
+  },
+  "responsibilities": {
+    "title": "المسؤوليات المالية",
+    "reallocate": "إعادة تخصيص الميزانيات",
+    "newResponsibility": "+ مسؤولية جديدة",
+    "newResponsibilityTitle": "مسؤولية مالية جديدة",
+    "editResponsibilityTitle": "تعديل المسؤولية المالية",
+    "reallocateTitle": "إعادة تخصيص الميزانيات",
+    "assignedTo": "معينة لـ: {name}",
+    "form": {
+      "name": "اسم المسؤولية",
+      "totalBudget": "إجمالي الميزانية",
+      "user": "مستخدم",
+      "group": "مجموعة",
+      "sharedBalance": "رصيد مجموعة مشترك",
+      "distributedBalance": "رصيد مجموعة موزع",
+      "distributeBudget": "توزيع الميزانية (الإجمالي: ${amount})",
+      "create": "إنشاء المسؤولية",
+      "update": "تحديث المسؤولية",
+      "reallocate": {
+        "from": "من",
+        "to": "إلى",
+        "amount": "المبلغ",
+        "placeholder": "المبلغ المراد إعادة تخصصه",
+        "submit": "إعادة تخصيص",
+        "errorSame": "لا يمكن أن يكون المصدر والوجهة متماثلين.",
+        "errorPositive": "يجب أن يكون المبلغ موجبًا.",
+        "errorExceeds": "المبلغ يتجاوز ميزانية المصدر.",
+        "errorDistribution": "يجب أن يكون مجموع المخصصات الموزعة (${allocated}) مساويًا لإجمالي الميزانية (${budget})."
+      }
+    }
+  },
+  "responsibilityDetail": {
+    "budgetOverview": "نظرة عامة على الميزانية",
+    "associatedExpenses": "المصروفات المرتبطة ({count})",
+    "noExpenses": "لم يتم تحميل أي مصروفات على هذه المسؤولية بعد.",
+    "history": "السجل والمراجعة",
+    "edit": "تعديل"
+  },
+  "notifications": {
+    "title": "إعدادات الإشعارات",
+    "smtpConfig": "تكوين SMTP",
+    "smtpServer": "خادم SMTP",
+    "port": "المنفذ",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "emailTemplates": "قوالب البريد الإلكتروني",
+    "subject": "الموضوع",
+    "bodyPlaceholder": "نص البريد الإلكتروني... يمكنك استخدام متغيرات مثل {userName}، {total}، {vendor}.",
+    "sendTest": "إرسال بريد اختباري",
+    "save": "حفظ الإعدادات"
+  },
+  "userManagement": {
+    "title": "إدارة المستخدمين",
+    "addUser": "+ إضافة مستخدم",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "actions": "الإجراءات",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "resetPass": "إعادة تعيين كلمة المرور",
+    "confirmReset": "هل أنت متأكد من أنك تريد إرسال رابط إعادة تعيين كلمة المرور لهذا المستخدم؟",
+    "editTitle": "تعديل المستخدم",
+    "addTitle": "إضافة مستخدم جديد",
+    "form": {
+      "fullName": "الاسم الكامل",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "passwordRequired": "كلمة المرور مطلوبة للمستخدمين الجدد.",
+      "assignGroups": "تعيين المجموعات",
+      "save": "حفظ التغييرات",
+      "create": "إنشاء مستخدم"
+    }
+  },
+  "confirmation": {
+      "deleteUserTitle": "حذف المستخدم",
+      "deleteUserMessage": "هل أنت متأكد من أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء."
+  },
+  "enums": {
+    "status": {
+      "Pending": "معلق",
+      "Approved": "معتمد",
+      "Rejected": "مرفوض"
+    },
+    "role": {
+      "user": "مستخدم",
+      "manager": "مدير مالي"
+    }
+  }
+}

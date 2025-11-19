@@ -1,0 +1,109 @@
+-- =================================================================================================
+-- Database Creation
+-- =================================================================================================
+-- CREATE DATABASE expense_manager_db ... (See previous instructions)
+
+-- =================================================================================================
+-- ExpenSavvy - Complete Database Setup Script for PostgreSQL
+-- =================================================================================================
+
+DROP TABLE IF EXISTS system_settings;
+DROP TABLE IF EXISTS expenses;
+DROP TABLE IF EXISTS financial_responsibilities;
+DROP TABLE IF EXISTS vendors;
+DROP TABLE IF EXISTS groups;
+DROP TABLE IF EXISTS users;
+
+-- =============================================
+-- TABLE CREATION (DDL)
+-- =============================================
+
+-- Users Table
+CREATE TABLE users (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
+);
+
+-- Groups Table
+CREATE TABLE groups (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    member_ids JSONB NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
+);
+
+-- Vendors Table
+CREATE TABLE vendors (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
+);
+
+-- Financial Responsibilities Table
+CREATE TABLE financial_responsibilities (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    budget NUMERIC(12, 2) NOT NULL,
+    model VARCHAR(50) NOT NULL,
+    assignee JSONB NOT NULL,
+    distributed_allocations JSONB,
+    history TEXT[],
+    is_deleted BOOLEAN DEFAULT FALSE
+);
+
+-- Expenses Table
+CREATE TABLE expenses (
+    id VARCHAR(50) PRIMARY KEY,
+    vendor VARCHAR(255) NOT NULL,
+    invoice_number VARCHAR(100),
+    date DATE NOT NULL,
+    line_items JSONB NOT NULL,
+    tax NUMERIC(10, 2) DEFAULT 0.00,
+    total NUMERIC(12, 2) NOT NULL,
+    notes TEXT,
+    category VARCHAR(100),
+    status VARCHAR(50) NOT NULL,
+    submitted_by VARCHAR(50) REFERENCES users(id),
+    responsibility_id VARCHAR(50) REFERENCES financial_responsibilities(id),
+    attachment JSONB,
+    is_deleted BOOLEAN DEFAULT FALSE
+);
+
+-- System Settings Table
+-- Stores SMTP config and Email Templates
+CREATE TABLE system_settings (
+    key VARCHAR(50) PRIMARY KEY,
+    value JSONB NOT NULL
+);
+
+-- =============================================
+-- SEED DATA INSERTION (DML)
+-- =============================================
+
+INSERT INTO users (id, name, email, role, password_hash) VALUES
+('user1', 'Alice', 'alice@example.com', 'Finance Manager', 'password123'),
+('user2', 'Bob', 'bob@example.com', 'User', 'password123'),
+('user3', 'Charlie', 'charlie@example.com', 'User', 'password123'),
+('user4', 'Diana', 'diana@example.com', 'User', 'password123');
+
+INSERT INTO groups (id, name, member_ids) VALUES
+('group1', 'Marketing Team', '["user2", "user3"]'),
+('group2', 'Engineering Team', '["user4"]');
+
+INSERT INTO vendors (id, name) VALUES
+('vendor1', 'AdCreative Inc.'),
+('vendor2', 'Cloud Services LLC'),
+('vendor3', 'Office Supplies Co.');
+
+INSERT INTO financial_responsibilities (id, name, budget, model, assignee, distributed_allocations, history) VALUES
+('resp1', 'Marketing Q3 Budget', 5000.00, 'Shared Group Balance', '{"type": "group", "id": "group1"}', NULL, '{"Created on 2024-07-01"}'),
+('resp2', 'Diana''s Software Subscription', 500.00, 'Shared Group Balance', '{"type": "user", "id": "user4"}', NULL, '{"Created on 2024-07-01"}'),
+('resp3', 'Engineering Projects Q3', 10000.00, 'Distributed Group Balance', '{"type": "group", "id": "group2"}', '[{"userId": "user4", "amount": 10000}]', '{"Created on 2024-07-10"}');
+
+INSERT INTO expenses (id, vendor, invoice_number, date, line_items, tax, total, notes, category, status, submitted_by, responsibility_id) VALUES
+('exp1', 'AdCreative Inc.', 'INV-001', '2024-07-15', '[{"description": "Social Media Campaign", "amount": 1200, "quantity": 1}]', 120.00, 1320.00, 'July campaign launch', 'Marketing', 'Approved', 'user2', 'resp1'),
+('exp2', 'Cloud Services LLC', 'INV-002', '2024-07-20', '[{"description": "Server Hosting", "amount": 350, "quantity": 1}]', 0.00, 350.00, '', 'Software', 'Pending', 'user4', 'resp2');

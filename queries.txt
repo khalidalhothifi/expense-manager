@@ -1,0 +1,93 @@
+-- NOTE: For these queries to work correctly with Arabic text (e.g., in names, notes, etc.),
+-- the database should be created with an appropriate Arabic collation.
+-- For PostgreSQL, use a collation like 'ar_SA.UTF-8'.
+-- For SQL Server, use a collation like 'Arabic_CI_AS'.
+
+-- This file contains all the necessary SQL queries for the ExpenSavvy application's backend.
+-- These queries are intended to be used with a PostgreSQL database, matching the schema in `db.sql`.
+-- Use parameterized queries to prevent SQL injection. The '?' placeholder is used here as a generic marker.
+
+-- =============================================
+-- AUTHENTICATION
+-- =============================================
+
+-- Authenticate a user by email and password.
+-- The password should be hashed before comparison.
+-- Returns the full user row if successful.
+-- Used in: api.login
+SELECT id, name, email, role FROM users WHERE email = ? AND password_hash = ?;
+
+
+-- =============================================
+-- USER MANAGEMENT (CRUD)
+-- =============================================
+
+-- Fetch all users without their passwords.
+-- Used in: api.getUsers
+SELECT id, name, email, role FROM users ORDER BY name;
+
+-- Add a new user to the database.
+-- The password_hash should be a securely hashed version of the user's password.
+-- Returns the newly created user's data (without password).
+-- Used in: api.addUser
+INSERT INTO users (name, email, role, password_hash) VALUES (?, ?, ?, ?) RETURNING id, name, email, role;
+
+-- Update an existing user's information.
+-- Used in: api.updateUser
+UPDATE users SET name = ?, email = ?, role = ? WHERE id = ? RETURNING id, name, email, role;
+
+-- Delete a user from the database.
+-- Used in: api.deleteUser
+DELETE FROM users WHERE id = ?;
+
+
+-- =============================================
+-- VENDORS
+-- =============================================
+
+-- Fetch all vendors.
+-- Used in: api.getVendors
+SELECT id, name FROM vendors ORDER BY name;
+
+-- Add a new vendor.
+-- Used in: api.addVendor (called from within api.addExpense)
+INSERT INTO vendors (name) VALUES (?) RETURNING id, name;
+
+
+-- =============================================
+-- EXPENSES (CRUD)
+-- =============================================
+
+-- Fetch all expenses, ordered by most recent first.
+-- Used in: api.getExpenses
+SELECT * FROM expenses ORDER BY date DESC;
+
+-- Add a new expense record.
+-- The line_items could be stored as a JSONB field in PostgreSQL.
+-- Used in: api.addExpense
+INSERT INTO expenses (vendor, invoice_number, date, line_items, tax, total, notes, category, status, submitted_by, responsibility_id, attachment)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+
+-- Update the status of an expense (e.g., from 'Pending' to 'Approved').
+-- Used in: api.updateExpenseStatus
+UPDATE expenses SET status = ? WHERE id = ? RETURNING *;
+
+
+-- =============================================
+-- FINANCIAL RESPONSIBILITIES & GROUPS
+-- =============================================
+
+-- Fetch all financial responsibilities.
+-- The distributed_allocations could be a JSONB field.
+-- Used in: api.getResponsibilities
+SELECT * FROM financial_responsibilities ORDER BY name;
+
+-- Add a new financial responsibility.
+-- The assignee and distributed_allocations could be JSONB fields.
+-- Used in: api.addResponsibility
+INSERT INTO financial_responsibilities (name, budget, model, assignee, distributed_allocations, history)
+VALUES (?, ?, ?, ?, ?, ?) RETURNING *;
+
+-- Fetch all groups.
+-- Used in: api.getGroups
+SELECT * FROM groups ORDER BY name;
